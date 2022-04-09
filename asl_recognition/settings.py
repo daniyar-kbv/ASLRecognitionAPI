@@ -11,8 +11,18 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+from object_detection.utils import label_map_util
+from object_detection.utils import config_util
+from object_detection.builders import model_builder
+from matplotlib import pyplot as plt
+import tensorflow as tf
+import os
+import cv2
+import matplotlib
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import constants
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -37,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'main',
 ]
 
 MIDDLEWARE = [
@@ -121,3 +132,14 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+PIPELINE_CONFIG = config_util.get_configs_from_pipeline_file(constants.PIPELINE_CONFIG_PATH)
+
+DETECTION_MODEL = model_builder.build(model_config=PIPELINE_CONFIG['model'],
+                                      is_training=False)
+
+CHECKPOINT = tf.compat.v2.train.Checkpoint(model=DETECTION_MODEL)
+CHECKPOINT.restore(constants.CHECKPOINT_PATH).expect_partial()
+
+CATEGORY_INDEX = label_map_util.create_category_index_from_labelmap(constants.LABEL_MAP_PATH,
+                                                                    use_display_name=True)

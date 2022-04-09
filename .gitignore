@@ -142,3 +142,4 @@ myenv/
 tests.py
 *.tf
 *.idea
+model/
